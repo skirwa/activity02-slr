@@ -6,3 +6,37 @@ output: github_document
 ```{setup, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE)
 ```
+
+```{r}
+#Install Packages
+library(tidyverse)
+library(tidymodels)
+```
+
+```{r}
+#Load data
+hfi <- readr::read_csv("https://www.openintro.org/data/csv/hfi.csv")
+```
+
+1.  What are the dimensions of the dataset? What does each row
+    represent? `hfi` has 1458 rows and 123 columns. Each row represents a country's observation.
+```{r}
+#Dimensions
+dim(hfi)
+```
+
+```{r}
+hfi_2016 <- hfi %>% filter(year == 2016)
+```
+2.  What type of plot would you use to display the relationship between
+    the personal freedom score, `pf_score`, and `pf_expression_control`?
+    Since they are continous variables, I would use a scatterplot.
+    
+```{r}
+#Plot a scatterplot
+
+hfi_2016 
+```
+
+
+
