@@ -201,7 +201,11 @@ Using this equation…
 
 5.  Interpret the *y*-intercept.
 
+**4.28 is the y-intercept**
+
 6.  Interpret the slope
+
+**0.542 is the slope**
 
 ## What is next?
 

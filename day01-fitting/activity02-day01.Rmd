@@ -19,7 +19,10 @@ hfi <- readr::read_csv("https://www.openintro.org/data/csv/hfi.csv")
 ```
 
 1.  What are the dimensions of the dataset? What does each row
-    represent? `hfi` has 1458 rows and 123 columns. Each row represents a country's observation.
+    represent? 
+    
+**hfi has 1458 rows and 123 columns. Each row represents a country's observation.**
+    
 ```{r}
 #Dimensions
 dim(hfi)
@@ -28,15 +31,50 @@ dim(hfi)
 ```{r}
 hfi_2016 <- hfi %>% filter(year == 2016)
 ```
+
 2.  What type of plot would you use to display the relationship between
     the personal freedom score, `pf_score`, and `pf_expression_control`?
-    Since they are continous variables, I would use a scatterplot.
+    
+**Since they are continous variables, I would use a scatterplot.**
     
 ```{r}
 #Plot a scatterplot
 
-hfi_2016 
+hfi_2016 %>% 
+  ggplot(mapping = aes(y=pf_score, x=pf_expression_control)) +
+  geom_point(colour = 'blue', size = 2) +
+  labs(
+    title = "Relationship between personal freedom score and expression control",
+    y = "Personal Freedom Score",
+    x = "Personal Freedom Expression Control"
+  ) +
+  theme(
+    panel.grid.minor = element_blank(),
+    panel.grid.major = element_blank()
+    )
 ```
 
+3.  Does the relationship look linear? If you knew a country’s
+    `pf_expression_control`, or its score out of 10, with 0 being the
+    most, of political pressures and controls on media content, would
+    you be comfortable using a linear model to predict the personal
+    freedom score?
+    
+**The relationship looks linear. From the plot it is evident that personal freedom expression control can be used to predict personal freedom score.**
 
+```{r}
+#Computes sum of squares
+statsr::plot_ss(x = pf_expression_control, y = pf_score, data = hfi_2016, showSquares = TRUE)
+```
 
+4.  Using `statsr::plot_ss`, choose a line that does a good job of
+    minimizing the sum of squares. Run the function several times. What
+    was the smallest sum of squares that you got? How does it compare to
+    your neighbour’s? 
+
+**The least SS I got was 3338.187**
+
+``` {r}
+m1 <- lm(pf_score ~ pf_expression_control, data = hfi_2016)
+tidy(m1)
+```
