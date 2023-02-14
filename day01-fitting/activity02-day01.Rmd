@@ -78,3 +78,172 @@ statsr::plot_ss(x = pf_expression_control, y = pf_score, data = hfi_2016, showSq
 m1 <- lm(pf_score ~ pf_expression_control, data = hfi_2016)
 tidy(m1)
 ```
+Using this equation…
+
+$$
+\hat{y} = 4.28 + 0.542 \times pf\_expression\_control
+$$
+
+5.  Interpret the *y*-intercept.
+
+**4.28 is the y-intercept.**
+> For countries with a `pf_expression_control` of 0 (those with the
+> largest amount of political pressure on media content), we expect
+> their mean personal freedom score to be 4.28.
+
+6.  Interpret the slope
+
+**0.542 is the slope**
+> For every 1 unit increase in `pf_expression_control`, we expect a
+> country’s mean personal freedom score to increase 0.542 units.
+
+```{r Correlation coefficient}
+correlation_coeff <- hfi_2016 %>% 
+  summarize(correlation = cor(pf_expression_control, pf_score))
+
+correlation_coeff
+```
+1.  What does this value mean in the context of this model?
+
+There is a positive and strong relationship between `pf_expression_control` and `pf_score`
+
+```{r}
+glance(m1)
+```
+
+2.  What is the value of $R^2$ for this model?
+
+0.7141342
+
+3.  What does this value mean in the context of this model?
+
+This means that 
+
+
+*In R, you can fit a linear regression model using the "lm" function (model <- lm(y ~ x1 + x2 + ..., data = your_data)), where "y" is the response variable, "x1", "x2", etc. are the predictor variables, and "your_data" is the data frame containing the variables. The "lm" function will fit a linear regression model to the data and store the result in the "model" object. You can then use various functions to examine and summarize the results of the model, such as "summary(model)" to get the model summary or "coef(model)" to get the coefficients of the model.*
+
+4. Fit a new model that uses `pf_expression_control` to predict `hf_score`, or the total human freedom score. 
+
+```{r}
+model <- lm(hf_score ~ pf_expression_control, data = hfi_2016)
+tidy(model)
+```
+
+Using the estimates from the R output, write the equation of the regression line. 
+
+$$
+\hat{y} = 5.05 + 0.37 \times pf\_expression\_control
+$$
+What does the slope tell us in the context of the relationship between human freedom and the amount of political pressure on media content?
+
+> For every 1 unit increase in `pf_expression_control`, we expect the human freedom score to increase 0.37 units.
+
+## Task 3: Prediction and prediction errors
+
+Before we start predicting, you will first create a scatterplot with the least squares line for `m1` laid on top.
+Copy-and-paste the *entire* code chunk of the scatterplot you created above. Add a layer to this (remember how `{ggplot2}` represents adding various data layers to plots) that shows a *smooth* line *geometry*. In this layer, be sure to specify the `method` as `"lm"` and do **not** display confidence intervals around your bands (hint: look at the help documentation for the layer you added).
+
+```{r}
+# se = FALSE tells R not to display confidence intervals
+# geom_smooth = Adds a smooth line geometry to the plot.
+hfi_2016 %>% 
+  ggplot(mapping = aes(y=pf_score, x=pf_expression_control)) +
+  geom_point(colour = 'orange', size = 2) +
+  geom_smooth(method = "lm", se = FALSE) +
+  labs(
+    title = "Relationship between personal freedom score and expression control",
+    y = "Personal Freedom Score",
+    x = "Personal Freedom Expression Control"
+  ) +
+  theme(
+    panel.grid.minor = element_blank(),
+    panel.grid.major = element_blank()
+    )
+
+```
+
+This line can be used to predict $y$ at any value of $x$. When predictions are made for values of $x$ that are beyond the range of the observed data, it is referred to as *extrapolation* and is not usually recommended. However, predictions made within the range of the data are more reliable. They’re also used to compute the residuals.
+
+If someone saw the least squares regression line and not the actual data, how would they predict a country’s personal freedom school for one with a 3 rating for `pf_expression_control`? *The personal freedom score would be 6 in this case*
+
+```{r}
+# This code gets the actual value of pf_score when pf_expression control is of rating 3
+# Subset the data to the observations that meet the condition
+subset_data <- hfi_2016[hfi_2016$pf_expression_control == 3, ]
+
+# Get the value of variable "y" for the first observation
+value <- subset_data$pf_score[1]
+value
+```
+Is this an overestimate or an underestimate, and by how much? In other words, what is the individual residual value for this prediction?
+
+> There is an overestimate. 
+> residual = actual - predicted.
+> 5.47 - 6 = -0.53
+
+## Task 4: Model diagnostics
+
+To assess whether the linear model is reliable, we should check for (1) linearity, (2) nearly normal residuals, and (3) constant variability. Note that the normal residuals is not really necessary for all models (sometimes we simply want to describe a relationship for the data that
+we have or population-level data, where statistical inference is not appropriate/necessary).
+
+In order to do these checks we need access to the fitted (predicted) values and the residuals. We can use `broom::augment` to calculate these.
+
+```{r}
+ml_aug <- augment(m1)
+```
+
+**Linearity**: You already checked if the relationship between `pf_score` and `pf_expression_control` is linear using a scatterplot. We should also verify this condition with a plot of the residuals vs. fitted (predicted) values.
+
+```{r}
+ggplot(data = ml_aug, mapping = aes(x= .fitted, y = .resid)) +
+  geom_point() +
+  geom_hline(yintercept = 0, linetype = "dashed", color = "red") +
+  xlab("Fitted values") +
+  ylab("Residuals")
+```
+
+Notice here that `m1_aug` can also serve as a data set because stored within it are the fitted values ($\hat{y}$) and the residuals. Also note that we are getting fancy with the code here. After creating the scatterplot on the first layer (first line of code), we overlay a red horizontal dashed line at $y = 0$ (to help us check whether the residuals are distributed around 0), and we also rename the axis labels
+to be more informative.
+
+Is there any apparent pattern in the residuals plot? What does this indicate about the linearity of the relationship between the two variables? `The residuals are randomly scattered around zero with no discernible pattern. This implies that the linear regression model fits the data well`
+
+*In a residual plot, the pattern of the residuals can provide information about the fit of the linear regression model. A residual plot is a scatterplot of the residuals (i.e., the differences between the observed values and the predicted values) on the y-axis and the predictor variable values on the x-axis. Here are a few patterns that can be observed in residual plots and what they might indicate:* 
+
+> Random scatter: The residuals are randomly scattered around zero with no discernible pattern. This is a good indication that the linear regression model fits the data well.
+
+> U-shaped or curved pattern: The residuals show a U-shaped or curved pattern. This can indicate that a linear model is not the best fit for the data and a non-linear model may be more appropriate.
+
+> Systematic trend: The residuals show a systematic trend, such as an increasing or decreasing pattern. This can indicate that the linear model is not capturing the underlying relationship between the predictor variable and the response variable, and a different model or transformation may be needed.
+
+> Outliers: The residuals for one or more observations are significantly larger than the others. This may indicate that the observation(s) is an outlier and is having a disproportionate impact on the model fit.
+
+*In general, a good residual plot should show a random scatter of points around the zero line, with no discernible patterns or outliers. Patterns in the residuals suggest that the linear regression model may not be the best fit for the data and that further exploration is needed.*
+
+**Nearly normal residuals**: To check this condition, we can look at a histogram of the residuals.
+
+```{r}
+ml_aug %>% ggplot(mapping = aes(x=.resid)) +
+  geom_histogram(binwidth = 0.25) +
+  xlab("Residuals")
+```
+
+Based on the histogram, does the nearly normal residuals condition appear to be violated? Why or why not? `The nearly normal residuals condition does not appear to be violated. The histogram is roughly symmetric around the mean. It is also bell-shaped, thus, implying the residuals are normally distributed.`
+
+*A histogram of residuals in a linear regression model can be a useful tool for assessing the normality of the residuals. Here are a few things to look for when interpreting a histogram of residuals:*
+
+> Symmetry: Ideally, the histogram should be roughly symmetric around the mean of the residuals. A histogram that is skewed to the left or right may indicate that the residuals are not normally distributed.
+
+> Normality: A histogram of residuals that has a bell-shaped curve can indicate that the residuals are normally distributed. However, be aware that small sample sizes may make it difficult to assess normality.
+
+> Outliers: Look for any individual residuals that are far from the mean of the residuals. Outliers can indicate that the linear regression model does not fit well for that particular observation, or that there may be measurement errors or other problems with the data.
+
+> Bin width: The bin width of the histogram can impact its interpretation. A bin width that is too narrow can make the histogram appear jagged, while a bin width that is too wide can smooth over important features of the distribution.
+
+*In general, a histogram of residuals should have a symmetric, bell-shaped curve around the mean of the residuals, with no individual residuals that are far from the mean. If the histogram shows signs of non-normality or outliers, this may indicate that the linear regression model is not the best fit for the data, or that there are issues with the data that need to be addressed.*
+
+**Constant variability**:
+
+Based on the residuals vs. fitted plot, does the constant variability condition appear to be violated? Why or why not? The constant variability condition appears to have been violated in the plot. This is because the residuals are not spread evenly around the horizontal line at zero. There's a slight discernible pattern on the left hand side.
+
+
+
